@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+redis==6.4.0
+pydantic==2.11.7
+python-dotenv==1.1.1
+pydantic-settings==2.10.1
+slowapi==0.1.9
+SQLAlchemy==2.0.43
+sqlmodel==0.0.24
+psycopg2-binary==2.9.10
+alembic==1.16.5
+sqladmin[full]
+itsdangerous
+pytest
+httpx

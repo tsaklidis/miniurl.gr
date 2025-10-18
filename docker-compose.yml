@@ -1,0 +1,44 @@
+version: "3.8"
+
+services:
+  miniurl_app:
+    build: .
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+    volumes:
+      - .:/app # Mount the entire project directory for dev, including Alembic, app code, etc.
+      - ./postgres-data:/var/lib/postgresql/data # Optional: allow local inspection of DB data
+    restart: unless-stopped
+
+  redis-cache:
+    image: redis:7-alpine
+    env_file:
+      - .env
+    ports:
+      - "${REDIS_CACHE_PORT}:${REDIS_CACHE_PORT}"
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--port ${REDIS_CACHE_PORT}"]
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

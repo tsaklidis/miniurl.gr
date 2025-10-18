@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MiniURL – Modern Link Shortener</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../static/css/styles.css">
+    <style>
+        .card { position: relative; overflow: visible; }
+        .logo-badge {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+        #result {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            flex-wrap: wrap;
+            font-size: .9rem;
+            font-weight: 500;
+        }
+        #result a.short-url {
+            text-decoration: none;
+            font-weight: 600;
+            color: #26dbed;
+            overflow-wrap: anywhere;
+        }
+        .copy-btn {
+            background: var(--accent-soft, #eef4ff);
+            border: 1px solid var(--accent-soft-border, #d5e4ff);
+            color: var(--accent, #2563eb);
+            height: 42px;
+            padding: 0 .95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: .85rem;
+            font-weight: 600;
+            transition: background .18s, transform .18s;
+        }
+        .copy-btn:hover {
+            background: var(--accent-soft-hover, #e2edff);
+            transform: translateY(-2px);
+        }
+        .copy-btn.success {
+            background: #16a34a;
+            color: #fff;
+            border-color: #16a34a;
+        }
+        .error { color: #dc2626; }
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Simple timing display - no button appearance */
+        .timing-display {
+            margin-top: 0.75rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .timing-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .timing-text {
+            font-size: 0.8rem;
+            color: var(--gray-6, #64748b);
+            font-weight: 500;
+        }
+        .timing-number {
+            color: #64ed26;
+            font-weight: 600;
+        }
+        .speed-message {
+            margin-top: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .speed-fast { color: #10b981; }
+        .speed-normal { color: #f59e0b; }
+        .speed-slow { color: #ef4444; }
+
+        @media (prefers-color-scheme: dark) {
+            .timing-text { color: var(--gray-6, #94a3b8); }
+            .timing-number { color: #64ed26; }
+        }
+    </style>
+</head>
+<body>
+<main>
+    <section class="card">
+        <div class="logo-badge">✄</div>
+        <header>
+            <h1>MiniURL</h1>
+            <p class="subtitle">The fastest way to minify your links</p>
+        </header>
+
+        <form id="minifyForm">
+            <div class="input-wrapper">
+                <input
+                        type="url"
+                        id="urlInput"
+                        placeholder="Paste your long URL here..."
+                        required
+                />
+            </div>
+            <button type="submit" id="submitBtn">
+                <span>Minify</span>
+            </button>
+        </form>
+
+        <div id="result"></div>
+
+        <div id="timingDisplay" class="timing-display">
+            <div class="timing-text">
+                ⚡ Minified in <span class="timing-number" id="timingNumber">0</span> ms
+            </div>
+            <div class="speed-message" id="speedMessage"></div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <p>&copy; 2025 MiniURL &middot; <a href="https://tsaklidis.gr">tsaklidis.gr</a></p>
+</footer>
+
+<script src="../static/js/jquery.3.7.1.min.js"></script>
+<script src="../static/js/main.js"></script>
+</body>
+</html>
