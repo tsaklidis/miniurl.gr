@@ -2,7 +2,6 @@ import os
 import logging.config
 
 from fastapi import FastAPI
-from fastapi.security import OAuth2PasswordBearer
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
@@ -10,7 +9,7 @@ from sqladmin import Admin
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import FileResponse
 
-from app.admin.admin import UrlsAdmin, UserAdmin
+from app.admin.admin import UrlsAdmin
 from app.api import base as api_endpoints
 from app.core.config import settings
 from app.core.rate_limit import limiter
@@ -46,7 +45,6 @@ admin = Admin(
     base_url=settings.ADMIN_URL,
 )
 admin.add_view(UrlsAdmin)
-admin.add_view(UserAdmin)
 
 # Register the catch-all router LAST
 app.include_router(main_router)
