@@ -7,9 +7,6 @@ services:
       - .env
     ports:
       - "8000:8000"
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
     volumes:
       - .:/app # Mount the entire project directory for dev, including Alembic, app code, etc.
       - ./postgres-data:/var/lib/postgresql/data # Optional: allow local inspection of DB data

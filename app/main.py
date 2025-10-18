@@ -26,7 +26,11 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="miniurl.gr",
     description="A lightning-fast URL shortener.",
-    version="0.1.0"
+    version="1.0.0",
+    contact={
+        "name": "Stefanos I. Tsaklidis",
+        "url": "https://tsaklidis.gr",
+    }
 )
 
 # Add exception handler and limiter
@@ -45,6 +49,7 @@ admin.add_view(UserAdmin)
 
 # Register the catch-all router LAST
 app.include_router(main_router)
+
 # Register specific routers FIRST
 app.include_router(api_endpoints.api_router)
 app.include_router(api_endpoints.health_router)
