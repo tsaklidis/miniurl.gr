@@ -30,7 +30,8 @@ app = FastAPI(
     contact={
         "name": "Stefanos I. Tsaklidis",
         "url": "https://tsaklidis.gr",
-    }
+    },
+    docs_url=None, redoc_url=None, openapi_url=None
 )
 
 # Add exception handler and limiter
