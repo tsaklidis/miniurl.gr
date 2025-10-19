@@ -11,7 +11,9 @@
 ## The fastest way to minify your links
 
 MiniURL is a fast, lightweight, and modern URL shortener built with Python and SQLModel. <br>
-Easily minify your links with a simple interface.
+Easily minify your links with a simple interface.<br>
+
+Because your links deserve to be short and sweet.
 
 ## 🚀 Features
 
@@ -54,26 +56,16 @@ docker run -p 8000:8000 miniurl
 
 - `POST /shorten` — Minify a URL
 - `GET /{alias}` — Redirect to the original URL
-- `GET /stats/{alias}` — Get click statistics
-
-Explore the interactive documentation at `/docs`!
+- `GET /stats/{alias}` — Get click statistics (TODO)
 
 ## 💡 Example Usage
 
 ```python
 import requests
 
-response = requests.post(
-    "http://localhost:8000/shorten",
-    json={"url": "https://www.example.com"}
-)
+data = {"url": "https://www.example.com"}
+response = requests.post("https://miniurl.gr/api/v1.0/minify", json=data)
 print(response.json())
-```
-
-## 🧪 Running Tests
-
-```bash
-pytest
 ```
 
 ## 📝 Contributing
@@ -86,4 +78,3 @@ Licensed under the [MIT License](LICENSE).
 
 ---
 
-> Because your links deserve to be short and sweet.
