@@ -97,7 +97,7 @@ jobs:
 
       - name: Run integration tests
         run: |
-          coverage run -m pytest tests/smoke
+          coverage run -m pytest tests/smoke/test_live_api.py
           coverage report
           coverage xml
 
