@@ -1,4 +1,7 @@
 import os
+import secrets
+from random import random
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
@@ -36,7 +39,7 @@ class EnvSettings(BaseSettings):
     SQL_LOG_LEVEL : int = int(os.getenv("SQL_LOG_LEVEL", 30))
 
     DB_NAME: str = os.getenv("DB_NAME", "miniurl.db")
-    APP_API_TOKEN: str = os.getenv("APP_API_TOKEN", None)
-    ADMIN_URL: str = os.getenv("ADMIN_URL", None)
+    APP_API_TOKEN: str = os.getenv("APP_API_TOKEN", secrets.token_urlsafe(32))
+    ADMIN_URL: str = os.getenv("ADMIN_URL", secrets.token_urlsafe(32))
 
 settings = EnvSettings()
