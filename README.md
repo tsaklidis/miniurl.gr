@@ -1,7 +1,5 @@
 # MiniURL
 
-## The fastest way to minify your links
-
 [![python](https://img.shields.io/badge/python-3.12-blue)](https://www.python.org/)
 [![db](https://img.shields.io/badge/db-sqlmodel-7e56c2)](https://sqlmodel.tiangolo.com/)
 ![Codecov](https://img.shields.io/codecov/c/github/tsaklidis/miniurl.gr?logo=codecov)
@@ -9,7 +7,10 @@
 
 ---
 
-MiniURL is a blazing fast, lightweight, and modern URL shortener built with Python and SQLModel. <br>
+
+## The fastest way to minify your links
+
+MiniURL is a fast, lightweight, and modern URL shortener built with Python and SQLModel. <br>
 Easily minify your links with a simple interface.
 
 ## 🚀 Features
@@ -25,9 +26,13 @@ Easily minify your links with a simple interface.
 ## 📦 Tech Stack
 
 - **Backend:** Python 3.12, FastAPI
+- **Cache:** Redis
 - **Database:** SQLModel (SQLAlchemy + Pydantic)
 - **Containerization:** Docker
 - **Testing:** Pytest, Codecov
+
+## 📊 Stats
+<img src="image.png" alt="Project structure showing image.png in red" style="max-width:80%; border-radius:8px;">
 
 ## 🛠️ Installation
 
