@@ -11,5 +11,10 @@ psycopg2-binary==2.9.10
 alembic==1.16.5
 sqladmin[full]
 itsdangerous
+
+# Required only for tests
 pytest
+pytest-asyncio
 httpx
+requests==2.32.5
+faker

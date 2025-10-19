@@ -1,74 +1,66 @@
 import pytest
-from fastapi.testclient import TestClient
-from app.main import app
+import requests
+import time
+from faker import Faker
+
 from app.core.config import settings
 
-client = TestClient(app)
+BASE_URL = settings.BASE_URL
+MINIFY_ENDPOINT = f"{BASE_URL}/api/v1.0/minify"
 
-def test_minify_url_success():
-    body = {
-        "url": "https://example.com",
-        # "preferred_alias": "exmpl1",
-        "description": "Test URL"
-    }
-    response = client.post("/api/v1.0/minify", json=body)
+fake = Faker()
+
+@pytest.fixture
+def random_url():
+    # Generates a random URL with query parameters
+    base = fake.url()
+    param_key = fake.word()
+    param_val = fake.word()
+    return f"{base}?{param_key}={param_val}&id={fake.random_int()}"
+
+def test_minify_status_code(random_url):
+    response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})
     assert response.status_code == 200
-    # Assert response contains alias or shortened URL
-    assert "exmpl1" in response.text or "alias" in response.json()
 
-def test_minify_url_validation_error():
-    # Missing required 'url'
-    body = {}
-    response = client.post("/api/v1.0/minify", json=body)
-    assert response.status_code == 422
-    assert "detail" in response.json()
+def test_minified_url_in_response(random_url):
+    response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})
+    data = response.json()
+    assert "minified_url" in data
 
-def test_minify_url_rate_limit():
-    # Simulate too many requests (mock in real test)
-    # Here just check for correct status code and error message format
-    response = client.post("/api/v1.0/minify", json={"url": "https://example.com"})
-    if response.status_code == 429:
-        assert "Rate limit exceeded" in response.text
+def test_redirect_is_301(random_url):
+    response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})
+    minified_url = response.json()["minified_url"]
+    redirect_response = requests.get(minified_url, allow_redirects=False)
+    assert redirect_response.status_code == 301
 
-def test_resolve_url_redirect():
-    # This endpoint should redirect; supply a valid alias
-    alias = "exmpl1"
-    response = client.get(f"/{alias}")
-    # Expect a redirect or a JSON response, depending on implementation
-    assert response.status_code in [200, 302, 307]
+def test_alias_returns_original_url(random_url):
+    response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})
+    minified_url = response.json()["minified_url"]
+    alias = minified_url.split('/')[-1]
+    api_alias_endpoint = f"{BASE_URL}/api/v1.0/{alias}"
+    alias_response = requests.get(api_alias_endpoint)
+    alias_data = alias_response.json()
+    assert "url" in alias_data
+    assert alias_data["url"] == random_url
 
-def test_resolve_url_json():
-    # This endpoint returns JSON for a valid alias
-    alias = "exmpl1"
-    response = client.get(f"/api/v1.0/{alias}")
-    assert response.status_code == 200
-    # Expect JSON containing original URL or similar
-    assert "http" in response.text or isinstance(response.json(), dict)
+def test_response_times_under_1000ms(random_url):
+    # Test POST /minify
+    start = time.time()
+    response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})
+    elapsed_ms = (time.time() - start) * 1000
+    assert elapsed_ms < 1000
 
-def test_resolve_url_validation_error():
-    # Alias too short (less than minLength)
-    alias = "x"
-    response = client.get(f"/api/v1.0/{alias}")
-    assert response.status_code == 422
-    assert "detail" in response.json()
+    # Test GET minified_url
+    minified_url = response.json()["minified_url"]
+    start = time.time()
+    redirect_response = requests.get(minified_url, allow_redirects=False)
+    elapsed_ms = (time.time() - start) * 1000
+    assert elapsed_ms < 1000
 
-def test_health_redis_with_apikey():
-    headers = {"api-token": settings.APP_API_TOKEN}
-    response = client.get("/health/redis", headers=headers)
-    assert response.status_code == 200 or response.status_code == 429
-    result = response.json()
-    assert "healthy" in result
-
-def test_health_redis_rw_with_apikey():
-    headers = {"api-token": settings.APP_API_TOKEN}
-    response = client.get("/health/redis_rw", headers=headers)
-    assert response.status_code == 200 or response.status_code == 429
-    result = response.json()
-    assert "healthy" in result
-
-def test_health_redis_data_with_apikey():
-    headers = {"api-token": settings.APP_API_TOKEN}
-    response = client.get("/health/redis_data", headers=headers)
-    assert response.status_code == 200 or response.status_code == 429
-    # Response should be a dict of {key: value}
-
+    # Test GET /api/v1.0/{alias}
+    alias = minified_url.split('/')[-1]
+    api_alias_endpoint = f"{BASE_URL}/api/v1.0/{alias}"
+    start = time.time()
+    alias_response = requests.get(api_alias_endpoint)
+    elapsed_ms = (time.time() - start) * 1000
+    assert elapsed_ms < 1000
