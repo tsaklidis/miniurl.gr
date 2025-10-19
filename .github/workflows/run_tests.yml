@@ -25,6 +25,11 @@ jobs:
           --health-timeout 5s
           --health-retries 3
 
+    env:
+      REDIS_HOST: localhost
+      REDIS_PORT: 6379
+      API_BASE_URL: http://localhost:8000
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -43,7 +48,7 @@ jobs:
       - name: Set PYTHONPATH and .env
         run: |
           echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-          mv .env.example .env
+          mv .env.example .env || true
 
       - name: Wait for Redis to be ready
         run: |
@@ -55,7 +60,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          coverage run -m pytest tests/internal
+          coverage run -m pytest tests/
           coverage report
           coverage xml
 
@@ -72,6 +77,8 @@ jobs:
     name: Integration Tests (Online Service)
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    env:
+      API_BASE_URL: https://miniurl.gr
 
     steps:
       - name: Checkout repository
@@ -88,13 +95,9 @@ jobs:
           pip install -r requirements.txt
           pip install coverage pytest pytest-asyncio
 
-      - name: Set environment for online service
-        run: |
-          echo "SERVICE_URL=https://miniurl.gr" >> $GITHUB_ENV
-
       - name: Run integration tests
         run: |
-          coverage run -m pytest tests/smoke/
+          coverage run -m pytest tests/smoke
           coverage report
           coverage xml
 
