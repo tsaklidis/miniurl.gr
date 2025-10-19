@@ -9,10 +9,7 @@ on:
       - 'fix/**'
   pull_request:
     branches:
-      - main
       - master
-      - 'feature/**'
-      - 'fix/**'
 
 jobs:
   test:
