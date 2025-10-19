@@ -76,5 +76,3 @@ Pull requests and issues are welcome!
 
 Licensed under the [MIT License](LICENSE).
 
----
-
