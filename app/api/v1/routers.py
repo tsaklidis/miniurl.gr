@@ -42,7 +42,8 @@ async def minify_url(request: Request, item: UrlRequestRecord, background_tasks:
     }
 
 @router.get("/{alias}")
-async def resolve_url(alias: str, background_tasks: BackgroundTasks):
+@limiter.limit("30/minute")
+async def resolve_url(request: Request, alias: str, background_tasks: BackgroundTasks):
     """
     Resolve a minified url alias to its original url.
     No redirect, just return the original URL in JSON.
