@@ -16,7 +16,7 @@ def random_url():
     base = fake.url()
     param_key = fake.word()
     param_val = fake.word()
-    return f"{base}?{param_key}={param_val}&id={fake.random_int()}"
+    return f"{base}?{param_key}={param_val}&id={fake.random_int()}&from_tests=True"
 
 def test_minify_status_code(random_url):
     response = requests.post(MINIFY_ENDPOINT, json={"url": random_url})

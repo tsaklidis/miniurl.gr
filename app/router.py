@@ -1,7 +1,9 @@
 import logging
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+
+from fastapi import APIRouter, BackgroundTasks, Request
 from starlette.responses import RedirectResponse, Response
 
+from app.core.rate_limit import rate_limit_response, limiter
 from app.databases.general import resolve_url_from_dbs, increase_click
 from app.databases.redis import save_to_cache
 from app.errors.api_errors import NotFound
@@ -13,8 +15,9 @@ main_router = APIRouter(
     prefix="",
 )
 
-@main_router.get("/{alias}")
-async def resolve_url(alias: str, background_tasks: BackgroundTasks) -> Response:
+@main_router.get("/{alias}", responses=rate_limit_response)
+@limiter.limit("60/minute")
+async def resolve_url(request: Request, alias: str, background_tasks: BackgroundTasks) -> Response:
     """
     Resolve a minified url alias to its original url
     """

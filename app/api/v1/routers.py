@@ -41,7 +41,7 @@ async def minify_url(request: Request, item: UrlRequestRecord, background_tasks:
         "minified_url": f"{base_url}/{item.preferred_alias}",
     }
 
-@router.get("/{alias}")
+@router.get("/{alias}", responses=rate_limit_response)
 @limiter.limit("30/minute")
 async def resolve_url(request: Request, alias: str, background_tasks: BackgroundTasks):
     """
