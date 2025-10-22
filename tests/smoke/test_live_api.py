@@ -6,7 +6,7 @@ from faker import Faker
 
 from app.core.config import settings
 
-BASE_URL = os.getenv("API_BASE_URL", getattr(settings, "BASE_URL", "https://miniurl.gr"))
+BASE_URL = "https://miniurl.gr"
 MINIFY_ENDPOINT = f"{BASE_URL}/api/v1.0/minify"
 
 fake = Faker()
