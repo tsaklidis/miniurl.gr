@@ -7,6 +7,7 @@ from app.databases.redis import save_to_cache, get_from_cache
 
 
 def random_str(length=8):
+    """Generate a random string for cache key uniqueness."""
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
 
 
@@ -17,7 +18,7 @@ async def test_save_and_get_from_cache():
     expire = 1
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
-        # First get() → None (cache miss), second get() → cached value
+        # Simulate cache miss on first get, then return stored value
         mock_cache.get = AsyncMock(side_effect=[None, value.encode()])
         mock_cache.set = AsyncMock(return_value=True)
 
@@ -28,7 +29,7 @@ async def test_save_and_get_from_cache():
         assert cached_value.decode() == value
 
         mock_cache.set.assert_awaited_once_with(name=key, value=value, ex=expire)
-        assert mock_cache.get.await_count == 2  # called twice (miss + hit)
+        assert mock_cache.get.await_count == 2
 
 
 @pytest.mark.asyncio
@@ -38,7 +39,8 @@ async def test_save_to_cache_no_expiration():
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
         mock_cache.set = AsyncMock(return_value=True)
-        mock_cache.get = AsyncMock(return_value=value.encode())
+        # First get: cache miss, second get: return cached value
+        mock_cache.get = AsyncMock(side_effect=[None, value.encode()])
         mock_cache.delete = AsyncMock(return_value=1)
 
         result = await save_to_cache(key, value)
@@ -59,23 +61,25 @@ async def test_save_to_cache_prevents_overwrites():
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
         mock_cache.set = AsyncMock(return_value=True)
-        # Always return the same value (cache already populated)
-        mock_cache.get = AsyncMock(return_value=value1.encode())
+        # First get: None (key not in cache)
+        # Second: value1 (after first save)
+        # Third: value1 (still in cache during overwrite attempt)
+        mock_cache.get = AsyncMock(side_effect=[None, value1.encode(), value1.encode()])
         mock_cache.delete = AsyncMock(return_value=1)
 
-        # First save: should succeed
+        # First save succeeds
         result1 = await save_to_cache(key, value1)
         assert result1 is True
 
         cached_value1 = await get_from_cache(key)
         assert cached_value1.decode() == value1
 
-        # Second save: should NOT overwrite
+        # Second save should not overwrite
         overwritten = await save_to_cache(key, value2)
         assert overwritten is False
 
         cached_value = await get_from_cache(key)
-        assert cached_value.decode() == value1  # still old value
+        assert cached_value.decode() == value1
 
         await mock_cache.delete(key)
         mock_cache.delete.assert_awaited_once_with(key)
