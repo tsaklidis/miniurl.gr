@@ -45,7 +45,7 @@ async def test_save_to_cache_no_expiration():
         mock_cache.delete.assert_awaited_once_with(key)
 
 @pytest.mark.asyncio
-async def test_save_to_cache_overwrites():
+async def test_save_to_cache_prevents_overwrites():
     key = f"testkey_{random_str()}"
     value1 = "value1"
     value2 = "value2"
