@@ -59,9 +59,10 @@ async def test_save_to_cache_overwrites():
         cached_value1 = await get_from_cache(key)
         assert cached_value1.decode() == value1
 
-        await save_to_cache(key, value2)
-        cached_value2 = await get_from_cache(key)
-        assert cached_value2.decode() == value2
+        overwritten = await save_to_cache(key, value2)
+        assert overwritten is False
+        cached_value = await get_from_cache(key)
+        assert cached_value.decode() == cached_value1
 
         await mock_cache.delete(key)
         mock_cache.delete.assert_awaited_once_with(key)
