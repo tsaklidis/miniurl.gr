@@ -35,6 +35,8 @@ async def minify_url(request: Request, item: UrlRequestRecord, background_tasks:
     # Save to cache/db in the background so we don't block the response
     background_tasks.add_task(save_to_cache, key=item.preferred_alias, value=item.url)
 
+    # This way there is a chance of data lose if the alias already exists
+    # User is not informed.
     background_tasks.add_task(actions.add_url, item.preferred_alias, item.url, item.description)
     base_url = settings.BASE_URL
     return {

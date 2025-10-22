@@ -38,6 +38,11 @@ async def save_to_cache(key: str, value: str, expire: int = 86400):
         value (str): The value to store.
         expire (int, optional): Expiration time in seconds. If None, no expiration.
     """
+    in_cache = await redis_cache.get(key)
+    if in_cache:
+        logger.error(f"Collision! Key already exists in cache: {key}")
+        return False
+
     try:
         logger.info(f"Saving to cache: {key}:{value}")
         return await redis_cache.set(name=key, value=value, ex=expire)
