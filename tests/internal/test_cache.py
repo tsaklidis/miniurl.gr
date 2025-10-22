@@ -16,7 +16,7 @@ async def test_save_and_get_from_cache():
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
         mock_cache.set = AsyncMock(return_value=True)
-        mock_cache.get = AsyncMock(return_value=value.encode())
+        mock_cache.get = AsyncMock(side_effect=[None, value.encode()])
 
         result = await save_to_cache(key, value, expire=expire)
         assert result is True
@@ -52,7 +52,7 @@ async def test_save_to_cache_prevents_overwrites():
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
         mock_cache.set = AsyncMock(return_value=True)
-        mock_cache.get = AsyncMock(side_effect=[value1.encode(), value2.encode()])
+        mock_cache.get = AsyncMock(side_effect=[value1.encode(), value1.encode()])
         mock_cache.delete = AsyncMock(return_value=1)
 
         await save_to_cache(key, value1)
