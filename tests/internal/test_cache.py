@@ -61,25 +61,29 @@ async def test_save_to_cache_prevents_overwrites():
 
     with patch("app.databases.redis.redis_cache", autospec=True) as mock_cache:
         mock_cache.set = AsyncMock(return_value=True)
-        # First get: None (key not in cache)
-        # Second: value1 (after first save)
-        # Third: value1 (still in cache during overwrite attempt)
-        mock_cache.get = AsyncMock(side_effect=[None, value1.encode(), value1.encode()])
+        # get() call sequence:
+        # 1️⃣ Before first save: None (empty cache)
+        # 2️⃣ After first save: value1 (success)
+        # 3️⃣ Before overwrite: value1 (already exists)
+        # 4️⃣ After overwrite attempt: still value1
+        mock_cache.get = AsyncMock(
+            side_effect=[None, value1.encode(), value1.encode(), value1.encode()]
+        )
         mock_cache.delete = AsyncMock(return_value=1)
 
-        # First save succeeds
+        # First save should succeed (cache empty)
         result1 = await save_to_cache(key, value1)
         assert result1 is True
 
         cached_value1 = await get_from_cache(key)
         assert cached_value1.decode() == value1
 
-        # Second save should not overwrite
+        # Second save should detect existing key and return False
         overwritten = await save_to_cache(key, value2)
         assert overwritten is False
 
         cached_value = await get_from_cache(key)
-        assert cached_value.decode() == value1
+        assert cached_value.decode() == value1  # unchanged
 
         await mock_cache.delete(key)
         mock_cache.delete.assert_awaited_once_with(key)
