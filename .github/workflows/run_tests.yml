@@ -89,7 +89,6 @@ jobs:
           echo "POSTGRES_PASSWORD=testpass" >> .env
           echo "POSTGRES_DB=testdb" >> .env
           echo "API_BASE_URL=http://localhost:8000" >> .env
-          # Add any other secrets or configs your app needs
 
       - name: Set PYTHONPATH
         run: |
@@ -97,15 +96,23 @@ jobs:
 
       - name: Run DB migrations (if needed)
         run: |
-          # Example for Alembic; modify for your project
           if [ -f "alembic.ini" ]; then
             alembic upgrade head
           fi
 
       - name: Start FastAPI app in background
         run: |
-          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-          sleep 5  # Wait for server to start
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > fastapi.log 2>&1 &
+          sleep 10
+          cat fastapi.log
+
+      - name: Wait for FastAPI to be ready
+        run: |
+          for i in $(seq 1 30); do
+            nc -z localhost 8000 && echo "FastAPI is up" && exit 0
+            sleep 1
+          done
+          echo "FastAPI did not start in time" && exit 1
 
       - name: Run tests with coverage
         run: |

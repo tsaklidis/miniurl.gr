@@ -9,6 +9,23 @@ MINIFY_ENDPOINT = f"{BASE_URL}/api/v1.0/minify"
 
 fake = Faker()
 
+def wait_for_api(url, timeout=30):
+    """Wait until the API is up (simple health check on root endpoint or minify)."""
+    for _ in range(timeout):
+        try:
+            # Try root and minify endpoints
+            resp_root = requests.get(url)
+            resp_minify = requests.post(MINIFY_ENDPOINT, json={"url": "http://example.com/?from_tests=True"})
+            if resp_root.status_code in [200, 404] or resp_minify.status_code in [200, 201, 404]:
+                return True
+        except Exception:
+            time.sleep(1)
+    return False
+
+@pytest.fixture(scope="session", autouse=True)
+def ensure_api():
+    assert wait_for_api(BASE_URL), f"API not available at {BASE_URL}"
+
 @pytest.fixture
 def random_url():
     base = fake.url()
