@@ -46,6 +46,7 @@ jobs:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: testdb
+      MINIURL_API_TOKEN: ${{ secrets.MINIURL_API_TOKEN }}
 
     steps:
       - name: Checkout repository
