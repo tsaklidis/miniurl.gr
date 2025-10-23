@@ -46,7 +46,6 @@ jobs:
       POSTGRES_USER: testuser
       POSTGRES_PASSWORD: testpass
       POSTGRES_DB: testdb
-      API_BASE_URL: http://localhost:8000
 
     steps:
       - name: Checkout repository
@@ -61,7 +60,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install coverage pytest pytest-asyncio
+          pip install coverage pytest pytest-asyncio responses faker
 
       - name: Wait for Redis to be ready
         run: |
@@ -79,44 +78,9 @@ jobs:
           done
           echo "Postgres did not start in time" && exit 1
 
-      - name: Set up .env file
-        run: |
-          echo "REDIS_HOST=localhost" > .env
-          echo "REDIS_PORT=6379" >> .env
-          echo "POSTGRES_HOST=localhost" >> .env
-          echo "POSTGRES_PORT=5432" >> .env
-          echo "POSTGRES_USER=testuser" >> .env
-          echo "POSTGRES_PASSWORD=testpass" >> .env
-          echo "POSTGRES_DB=testdb" >> .env
-          echo "API_BASE_URL=http://localhost:8000" >> .env
-
-      - name: Set PYTHONPATH
-        run: |
-          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-
-      - name: Run DB migrations (if needed)
-        run: |
-          if [ -f "alembic.ini" ]; then
-            alembic upgrade head
-          fi
-
-      - name: Start FastAPI app in background
-        run: |
-          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > fastapi.log 2>&1 &
-          sleep 10
-          cat fastapi.log
-
-      - name: Wait for FastAPI to be ready
-        run: |
-          for i in $(seq 1 30); do
-            nc -z localhost 8000 && echo "FastAPI is up" && exit 0
-            sleep 1
-          done
-          echo "FastAPI did not start in time" && exit 1
-
       - name: Run tests with coverage
         run: |
-          coverage run -m pytest tests/internal tests/smoke
+          coverage run -m pytest tests
           coverage report
           coverage xml
 
