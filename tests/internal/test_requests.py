@@ -1,25 +1,8 @@
+import pytest
 import requests
 import time
-from rich.console import Console
-from rich.table import Table
-from rich.progress import track
 
 API_ENDPOINT = "https://miniurl.gr/api/v1.0/minify"
-
-URLS = [
-    "http://tsaklidis.gr",
-    "https://www.google.com",
-    "https://github.com",
-    "https://www.python.org",
-    "https://www.wikipedia.org",
-    "https://www.bbc.com",
-    "https://www.yahoo.com",
-    "https://www.stackoverflow.com",
-    "https://www.microsoft.com",
-    "https://www.apple.com"
-]
-
-console = Console()
 
 def minify_url(session, url):
     payload = {"url": url}
@@ -33,26 +16,37 @@ def minify_url(session, url):
     else:
         return None, elapsed, response.status_code
 
-def main(urls):
-    table = Table(title="URL Minification Stats", show_lines=True)
-    table.add_column("Original URL", style="cyan", no_wrap=True)
-    table.add_column("Minified URL", style="magenta")
-    table.add_column("Time (s)", style="green")
-    table.add_column("Status", style="yellow")
-
-    # Use a requests.Session for performance
+def test_minify_url_success():
+    url = "https://www.example.com"
     with requests.Session() as session:
-        for url in track(urls, description="Minifying URLs..."):
-            minified, elapsed, status = minify_url(session, url)
-            status_str = "✅ Success" if status == 200 else f"❌ Error ({status})"
-            table.add_row(
-                url,
-                minified if minified else "-",
-                f"{elapsed:.3f}",
-                status_str
-            )
+        minified, elapsed, status = minify_url(session, url)
 
-    console.print(table)
+    assert status == 200
+    assert minified is not None
+    assert minified.startswith("https://miniurl.gr/")
+    assert elapsed >= 0
 
-if __name__ == "__main__":
-    main(URLS)
+@pytest.mark.parametrize("url", [
+    "http://tsaklidis.gr",
+    "https://www.google.com",
+    "https://github.com",
+    "https://www.python.org"
+])
+def test_minify_url_various(url):
+    with requests.Session() as session:
+        minified, elapsed, status = minify_url(session, url)
+
+    assert status == 200
+    assert minified is not None
+    assert minified.startswith("https://miniurl.gr/")
+    assert elapsed >= 0
+
+def test_minify_url_invalid():
+    url = "not_a_url"
+    with requests.Session() as session:
+        minified, elapsed, status = minify_url(session, url)
+
+    # The service might return 400 Bad Request or similar
+    assert status != 200
+    assert minified is None or minified == ""
+    assert elapsed >= 0
