@@ -11,7 +11,7 @@ on:
 
 jobs:
   test:
-    name: Unit & Coverage Tests (Local)
+    name: Unit & Integration Tests (Local)
     runs-on: ubuntu-latest
 
     services:
@@ -24,11 +24,28 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 3
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U testuser"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     env:
       REDIS_HOST: localhost
       REDIS_PORT: 6379
-      API_BASE_URL: http://localhost:8000
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+      POSTGRES_DB: testdb
 
     steps:
       - name: Checkout repository
@@ -43,12 +60,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install coverage pytest pytest-asyncio
-
-      - name: Set PYTHONPATH and .env
-        run: |
-          echo "PYTHONPATH=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-          mv .env.example .env || true
+          pip install coverage pytest pytest-asyncio responses faker
 
       - name: Wait for Redis to be ready
         run: |
@@ -58,9 +70,17 @@ jobs:
           done
           echo "Redis did not start in time" && exit 1
 
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in $(seq 1 20); do
+            nc -z localhost 5432 && echo "Postgres is up" && exit 0
+            sleep 1
+          done
+          echo "Postgres did not start in time" && exit 1
+
       - name: Run tests with coverage
         run: |
-          coverage run -m pytest tests/internal
+          coverage run -m pytest tests
           coverage report
           coverage xml
 
@@ -70,42 +90,5 @@ jobs:
           file: ./coverage.xml
           flags: unittests
           name: codecov-umbrella
-          fail_ci_if_error: true
-          token: ${{ secrets.CODECOV_TOKEN }}
-
-  integration-test:
-    name: Integration Tests (Online Service)
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    env:
-      API_BASE_URL: https://miniurl.gr
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.12
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install coverage pytest pytest-asyncio
-
-      - name: Run integration tests
-        run: |
-          coverage run -m pytest tests/smoke/test_live_api.py
-          coverage report
-          coverage xml
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          file: ./coverage.xml
-          flags: integration-tests
-          name: codecov-integration
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}
