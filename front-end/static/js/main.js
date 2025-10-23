@@ -22,7 +22,7 @@ $(document).ready(function() {
         // Normalize and validate URL
         const normalizedUrl = normalizeUrl(longUrl);
         if (!normalizedUrl) {
-            showError('Please enter a valid URL (e.g., example.com or https://example.com)');
+            showError('Please enter a valid URL (e.g., example.com or https://tsaklidis.gr)');
             return;
         }
 
