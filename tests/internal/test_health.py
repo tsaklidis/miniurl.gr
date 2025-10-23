@@ -26,8 +26,6 @@ def test_protected_health_endpoints_authorized(endpoint):
     """
     Verify that all protected health endpoints return 200 OK when using a valid token.
     """
-    if not API_TOKEN:
-        return
 
     url = f"{BASE_URL}{endpoint}"
     headers = {"api-token": API_TOKEN}
