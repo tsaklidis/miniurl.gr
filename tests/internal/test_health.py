@@ -6,10 +6,6 @@ BASE_URL = "https://miniurl.gr"
 API_TOKEN = os.getenv("MINIURL_API_TOKEN")
 
 
-# ----------------------
-# 🟢 Public Endpoint Tests
-# ----------------------
-
 def test_health_psql_public():
     """
     /health/psql is public and should return 200 OK with {"message": True}.
@@ -21,14 +17,10 @@ def test_health_psql_public():
     assert data == {"message": True}, f"Unexpected response data: {data}"
 
 
-# ----------------------
-# 🔒 Protected Endpoints
-# ----------------------
-
 @pytest.mark.parametrize("endpoint", [
     "/health/redis",
     "/health/redis_rw",
-    "/health/redis_data",
+    # "/health/redis_data", The deployed redis server does not support this
 ])
 def test_protected_health_endpoints_authorized(endpoint):
     """
