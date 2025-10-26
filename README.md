@@ -34,7 +34,9 @@ Because your links deserve to be short and sweet.
 - **Testing:** Pytest, Codecov
 
 ## 📊 Stats
-<img src="image.png" alt="Project structure showing image.png in red" style="max-width:80%; border-radius:8px;">
+<img src="images/image.png" alt="Project structure showing stats" style="max-width:80%; border-radius:8px;">
+<br><br>
+<img src="images/admin_panel.png" alt="Project structure showing admin panel" style="max-width:80%; border-radius:8px;">
 
 ## 🛠️ Installation
 
