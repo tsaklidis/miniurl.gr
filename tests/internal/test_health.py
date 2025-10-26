@@ -11,7 +11,8 @@ def test_health_psql_public():
     /health/psql is public and should return 200 OK with {"message": True}.
     """
     url = f"{BASE_URL}/health/psql"
-    response = httpx.get(url, timeout=10)
+    headers = {"api-token": API_TOKEN}
+    response = httpx.get(url, headers=headers, timeout=10)
     assert response.status_code == 200, f"Unexpected status: {response.status_code}, body: {response.text}"
     data = response.json()
     assert data == {"message": True}, f"Unexpected response data: {data}"
