@@ -56,6 +56,13 @@ class DBActions:
                 logger.debug(f"Click count increased for alias: {alias} to {url_record.total_clicks}")
                 return url_record.total_clicks
 
+    def get_last_id(self):
+        """Get the last inserted ID in the Urls table"""
+        with Session(self.db_session) as session:
+            statement = select(Urls).order_by(Urls.id.desc())
+            result = session.exec(statement).first()
+            return result.id if result else None
+
 
 async def resolve_url_from_dbs(alias: str, got_from_cache=False):
     """
