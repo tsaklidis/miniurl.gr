@@ -1,14 +1,14 @@
 import logging
-from fastapi import APIRouter, BackgroundTasks, Request
+from fastapi import APIRouter, BackgroundTasks, Request, Depends
 
 from app.core.config import settings
 from app.core.rate_limit import rate_limit_response, limiter
-from app.databases.general import resolve_url_from_dbs, DBActions, increase_click
+from app.databases.general import DBActions
 from app.databases.redis import save_to_cache
 from app.databases.serializers import UrlRequestRecord
+from app.api.v1.dependencies import get_valid_alias, get_db_actions
 
 from app.utils.generators import get_random_url_string
-from app.errors.api_errors import NotFound
 
 
 logger = logging.getLogger(__name__)
@@ -45,17 +45,20 @@ async def minify_url(request: Request, item: UrlRequestRecord, background_tasks:
 
 @router.get("/{alias}", responses=rate_limit_response)
 @limiter.limit("30/minute")
-async def resolve_url(request: Request, alias: str, background_tasks: BackgroundTasks):
+async def resolve_url(
+        request: Request,
+        background_tasks: BackgroundTasks,
+        original_url: str = Depends(get_valid_alias),
+        db_actions: DBActions = Depends(get_db_actions)
+):
     """
     Resolve a minified url alias to its original url.
     No redirect, just return the original URL in JSON.
+
+    Endpoint depends on a valid alias being returned.
     """
-    original_url = await resolve_url_from_dbs(alias)
-    background_tasks.add_task(increase_click, alias)
 
-    if not original_url:
-        raise NotFound("Requested url not found")
-    
+    alias = request.path_params.get("alias")
+    background_tasks.add_task(db_actions.increase_click, alias)
     background_tasks.add_task(save_to_cache, alias, original_url)
-
     return {"url": original_url}
