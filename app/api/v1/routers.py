@@ -7,7 +7,8 @@ from app.core.rate_limit import rate_limit_response, limiter
 from app.databases.general import DBActions
 from app.databases.redis import save_to_cache
 from app.databases.serializers import UrlRequestRecord
-from app.api.v1.dependencies import get_valid_alias, get_db_actions, get_session
+from app.api.v1.dependencies import get_valid_alias, get_db_actions, get_session, \
+    get_valid_url_record
 
 from app.utils.generators import get_random_url_string
 
@@ -21,23 +22,14 @@ router = APIRouter()
 @limiter.limit("30/minute")
 async def minify_url(
         request: Request,
-        item: UrlRequestRecord,
         background_tasks: BackgroundTasks,
-        session: Session = Depends(get_session)
+        session: Session = Depends(get_session),
+        item: UrlRequestRecord = Depends(get_valid_url_record)
 ):
     """
     Minify a provided url
     """
-    actions = DBActions(session)  # Pass the session to DBActions
-    if item.preferred_alias:
-        exists = actions.get_url_by_alias(item.preferred_alias)
-        if exists:
-            raise ValueError(f"Alias '{item.preferred_alias}' already exists.")
-    else:
-        item.preferred_alias = get_random_url_string(6)
-
-    item.url = f"{item.url}".rstrip('/').strip()
-
+    actions = DBActions(session)
     # Save to cache/db in the background so we don't block the response
     background_tasks.add_task(save_to_cache, key=item.preferred_alias, value=item.url)
 
