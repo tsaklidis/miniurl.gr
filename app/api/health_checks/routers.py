@@ -2,7 +2,9 @@ from fastapi import APIRouter, status, Request, Depends, HTTPException
 from typing import Dict, Union
 
 from fastapi.security import APIKeyHeader
+from sqlmodel import Session
 
+from app.api.v1.dependencies import get_session
 from app.core.config import settings
 from app.databases.general import DBActions
 from app.databases.redis import redis_cache
@@ -18,12 +20,14 @@ def internal_only(auth=Depends(api_auth_scheme)):
     return True
 
 @router.get("/psql", responses=rate_limit_response, dependencies=[Depends(internal_only)])
-async def psql_status() -> Dict[str, Union[bool, str]]:
+async def psql_status(
+        session: Session = Depends(get_session),
+) -> Dict[str, Union[bool, str]]:
     """
     Health check endpoint for PostgreSQL connectivity.
     """
     try:
-        actions = DBActions()
+        actions = DBActions(session)
         last_id = actions.get_last_id()
         return {"healthy": True}
     except Exception as e:
