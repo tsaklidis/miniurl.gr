@@ -13,9 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class DBActions:
-    def __init__(self, db_session=None):
-        _manager = DatabaseManager()
-        self.db_session = db_session or _manager.get_db_instance()
+    def __init__(self, session: Session):
+        self.session = session
 
     def add_url(self, alias: str, original_url: Union[HttpUrl, str], description: str = None):
         urls_data = {
@@ -23,45 +22,37 @@ class DBActions:
             "original_url": original_url,
             "description": description
         }
-        with Session(self.db_session) as session:
-            url_obj = Urls(**urls_data)
-            session.add(url_obj)
-            try:
-                session.commit()
-                return url_obj
-            except IntegrityError as exc:
-                session.rollback()
-                # Check for unique constraint violation
-                # TODO inspect if this can be done better
-                if "unique" in str(exc).lower() or "duplicate" in str(exc).lower():
-                    raise ValueError(f"Alias '{alias}' already exists.") from exc
-                raise
+        url_obj = Urls(**urls_data)
+        self.session.add(url_obj)
+        try:
+            self.session.commit()
+            return url_obj
+        except IntegrityError as exc:
+            self.session.rollback()
+            if "unique" in str(exc).lower() or "duplicate" in str(exc).lower():
+                raise ValueError(f"Alias '{alias}' already exists.") from exc
+            raise
 
     def get_url_by_alias(self, alias: str, return_object=False):
-        """Get url based on alias"""
-        with Session(self.db_session) as session:
-            statement = select(Urls).where(Urls.alias == alias)
-            result = session.exec(statement).first()
-            if return_object:
-                return result
-            return result.original_url if result else None
+        statement = select(Urls).where(Urls.alias == alias)
+        result = self.session.exec(statement).first()
+        if return_object:
+            return result
+        return result.original_url if result else None
 
-    async def increase_click(self, alias: str):
+    def increase_click(self, alias: str):
         url_record = self.get_url_by_alias(alias, return_object=True)
         if url_record:
-            with Session(self.db_session) as session:
-                url_record.total_clicks = url_record.total_clicks + 1
-                session.add(url_record)
-                session.commit()
-                logger.debug(f"Click count increased for alias: {alias} to {url_record.total_clicks}")
-                return url_record.total_clicks
+            url_record.total_clicks = url_record.total_clicks + 1
+            self.session.add(url_record)
+            self.session.commit()
+            logger.debug(f"Click count increased for alias: {alias} to {url_record.total_clicks}")
+            return url_record.total_clicks
 
     def get_last_id(self):
-        """Get the last inserted ID in the Urls table"""
-        with Session(self.db_session) as session:
-            statement = select(Urls).order_by(Urls.id.desc())
-            result = session.exec(statement).first()
-            return result.id if result else None
+        statement = select(Urls).order_by(Urls.id.desc())
+        result = self.session.exec(statement).first()
+        return result.id if result else None
 
 
 async def resolve_url_from_dbs(alias: str, got_from_cache=False):
