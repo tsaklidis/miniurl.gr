@@ -5,10 +5,8 @@ from starlette.responses import RedirectResponse, Response
 
 from app.api.v1.dependencies import get_valid_alias, get_db_actions
 from app.core.rate_limit import rate_limit_response, limiter
-from app.databases.general import resolve_url_from_dbs, increase_click, \
-    DBActions
+from app.databases.general import DBActions
 from app.databases.redis import save_to_cache
-from app.errors.api_errors import NotFound
 
 logger = logging.getLogger(__name__)
 
