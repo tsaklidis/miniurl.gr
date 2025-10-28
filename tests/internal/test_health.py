@@ -6,9 +6,9 @@ BASE_URL = "https://miniurl.gr"
 API_TOKEN = os.getenv("MINIURL_API_TOKEN")
 
 
-def test_health_psql_public():
+def test_health_psql():
     """
-    /health/psql is public and should return 200 OK with {"healthy": True}.
+    /health/psql should return 200 OK with {"healthy": True}.
     """
     url = f"{BASE_URL}/health/psql"
     headers = {"api-token": API_TOKEN}
