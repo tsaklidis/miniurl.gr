@@ -4,7 +4,7 @@ from typing import Dict, Union
 from fastapi.security import APIKeyHeader
 
 from app.core.config import settings
-from app.databases.general import DBActions
+from app.databases.general import DBActionsBackground
 from app.databases.redis import redis_cache
 from app.core.rate_limit import limiter, rate_limit_response
 
@@ -23,7 +23,7 @@ async def psql_status() -> Dict[str, Union[bool, str]]:
     Health check endpoint for PostgreSQL connectivity.
     """
     try:
-        actions = DBActions()
+        actions = DBActionsBackground()
         last_id = actions.get_last_id()
         return {"healthy": True}
     except Exception as e:

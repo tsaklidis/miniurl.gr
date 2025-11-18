@@ -1,5 +1,6 @@
 import logging
 from sqlmodel import create_engine, Session
+from typing import Generator
 
 
 from app.core.config import settings
@@ -25,8 +26,10 @@ class DatabaseManager:
         return _engine
 
     @classmethod
-    def get_session(cls):
+    def get_session(cls) -> Generator[Session, None, None]:
         engine = cls.get_db_instance()
-        return Session(engine)
-
-
+        session = Session(engine)
+        try:
+            yield session
+        finally:
+            session.close()
